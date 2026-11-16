@@ -1,0 +1,16 @@
+{
+  "name": "cdf-sparse-observations",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.22.1 <23"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test",
+    "demo": "node scripts/demo.mjs",
+    "source": "node source/service.mjs",
+    "start": "node src/app.mjs"
+  }
+}
