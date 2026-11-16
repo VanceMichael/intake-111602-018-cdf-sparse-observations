@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { dispatch } from './domain.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -40,8 +41,25 @@ export async function startSource({ scenario = 'ordinary', port = 0 } = {}) {
       }
       if (route.delayMs) await new Promise(resolve => setTimeout(resolve, route.delayMs));
       if (route.earlyHints) response.writeEarlyHints({ link: route.earlyHints });
-      response.writeHead(route.status || 200, route.headers || {});
-      const bytes = route.base64 ? Buffer.from(route.base64, 'base64') : Buffer.from(route.body || '');
+      let bytes = route.base64 ? Buffer.from(route.base64, 'base64') : Buffer.from(route.body || '');
+      const etag = '"' + createHash('sha256').update(bytes).digest('hex') + '"';
+      const headers = { etag, 'accept-ranges': 'bytes', ...(route.headers || {}) };
+      if (request.headers['if-match'] && request.headers['if-match'] !== etag) {
+        response.writeHead(412, headers); return response.end('来源内容已变化');
+      }
+      let status = route.status || 200;
+      if (request.headers.range && status === 200) {
+        const match = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range);
+        const start = match ? Number(match[1]) : -1;
+        const end = match && match[2] ? Number(match[2]) : bytes.length - 1;
+        if (start < 0 || start >= bytes.length || end < start) {
+          response.writeHead(416, { ...headers, 'content-range': `bytes */${bytes.length}` }); return response.end();
+        }
+        const last = Math.min(end, bytes.length - 1);
+        headers['content-range'] = `bytes ${start}-${last}/${bytes.length}`;
+        bytes = bytes.subarray(start, last + 1); status = 206;
+      }
+      response.writeHead(status, headers);
       if (route.disconnect) {
         response.write(bytes.subarray(0, Math.max(1, Math.floor(bytes.length / 2))));
         return response.destroy();
