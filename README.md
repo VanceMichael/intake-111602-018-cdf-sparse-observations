@@ -4,7 +4,7 @@
 
 ## 环境与运行
 
-使用 Node.js 22.22.1，无第三方运行包。安装、检查与测试：
+使用 Node.js 22.23.4，无第三方运行包。安装、检查与测试：
 
 ```sh
 npm ci --ignore-scripts --offline
