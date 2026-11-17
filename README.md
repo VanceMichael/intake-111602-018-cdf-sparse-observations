@@ -17,9 +17,11 @@ npm run demo
 
 需要交互时分别运行 `npm run source` 与 `npm start`。来源默认监听本机 4310 端口，应用默认监听 4320；可用 `PORT`、`SOURCE_URL`、`DATA_DIR` 配置。`GET /preview` 获取预览，`POST /receipts` 接收当前资料，`GET /receipts` 查询凭据，`GET /objects/<摘要>` 回读原件。应用只允许配置到本机的资料服务。
 
+结构化接收另设：`POST /intakes` 领取并把变量展开成带来源分类的时间线，`POST /range-requests` 按时间范围选择观测（范围外依据单列为 `supporting`），`POST /intakes/resume` 按锁定版本补齐未完成会话，`GET /sessions` 列出接收会话。时间线把物理记录（`physical`）、PREV 前值延续（`previous`）与 PAD 填充（`pad`）分开标注，缺测时段不会再看起来像反复测到同一个数。
+
 ## 目录
 
-`source/` 负责资料源的发布日期和传输状态；`src/decode.mjs` 解释一份来源资料；`src/catalog.mjs` 管理不可变原件及接收凭据；`src/app.mjs` 提供查看服务。资料含义及来源控制见 `docs/资料接口.md`。
+`source/` 负责资料源的发布日期和传输状态；`src/decode.mjs` 解释一份来源资料（含 `materialize` 结构化解析）；`src/intake.mjs` 把物理记录、稀疏规则与独立时间变量核对成三类来源分明的时间线并支持范围选择；`src/sessions.mjs` 持久化可补齐的接收会话与依据指纹；`src/catalog.mjs` 管理不可变原件及接收凭据；`src/app.mjs` 提供查看服务。资料含义及来源控制见 `docs/资料接口.md`。
 
 ## 容器
 

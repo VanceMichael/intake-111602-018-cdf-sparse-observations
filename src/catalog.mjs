@@ -2,6 +2,9 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, open, readFile, readdir, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
+// 64 位整数（如 TT2000 时间）以 BigInt 表示，持久化时转字符串避免 JSON 序列化失败。
+const stringify = value => JSON.stringify(value, (key, item) => (typeof item === 'bigint' ? item.toString() : item), 2);
+
 export class Catalog {
   constructor(root) {
     this.root = root;
@@ -42,7 +45,7 @@ export class Catalog {
       const receipt = { id: randomUUID(), source, digest, bytes: bytes.length,
         mediaType, preview, receivedAt: new Date().toISOString() };
       await this.atomic(join(this.root, 'receipts', `${receipt.id}.json`),
-        Buffer.from(JSON.stringify(receipt, null, 2)));
+        Buffer.from(stringify(receipt)));
       return receipt;
     });
     this.serial = operation.catch(() => {});

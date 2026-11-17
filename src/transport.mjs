@@ -33,4 +33,14 @@ export class SourceClient {
     if (result.status !== 200) throw new Error(`来源控制失败：${result.status}`);
     return JSON.parse(result.bytes);
   }
+
+  // 带版本核对的领取。etag 存在时用 If-Match 锁定来源版本，版本不符由上层据 412 处理，
+  // 不在这里用新内容覆盖旧依据。range 存在时只领取指定字节区间。
+  async fetch(path, { etag, range } = {}) {
+    const headers = {};
+    if (etag) headers['if-match'] = etag;
+    if (range) headers.range = range;
+    const result = await this.request(path, { headers });
+    return result;
+  }
 }
